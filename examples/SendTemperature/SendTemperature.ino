@@ -67,11 +67,17 @@ void loop() {
 
     Serial.println("Sending data to Iven Cloud");
     IvenData data;
-    data.add("num", temp);
+
+    /* IMPORANT** please fill here according to your profile*/
+    data.add("<your device hardware profiles key>", temp);
 
     IvenResponse p = device.sendData(data);
     if (p.ivenCode == 1000) {
       Serial.println("Successfully sent to cloud");
+      Serial.println();
+    } 
+    else if (p.ivenCode == 1015) {
+      Serial.println("Your HW Profile key does not match");
       Serial.println();
     } else {
       Serial.println("Something wrong with the data check iven code to identify the problem");
