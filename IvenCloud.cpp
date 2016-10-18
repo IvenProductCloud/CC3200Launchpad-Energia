@@ -14,7 +14,7 @@ bool IvenCloudWiFi::ConnectClient()
     if (_client.connect(server,port)) 
       return true;
   }
-  response.error = IR_CONNECTION_ERROR;
+  response.error = IR_CANT_CONNECT_TO_SERVER;
   return false;
 }
 
@@ -263,9 +263,11 @@ IvenResponse IvenCloudWiFi::activateDevice(const char* secretKey, const char* de
 IvenResponse IvenCloudWiFi::sendData(IvenData& sensorData)
 {
   response.clearResponse();
+
   if (_apiKey.length() == 0)
-    response.error = IR_WRONG_ACTIVATION_CODE;
-  sendDataRequest(&sensorData);
+    response.error = IR_API_KEY_MISSING;
+  else
+    sendDataRequest(&sensorData);
 
   return response;
 }
