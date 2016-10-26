@@ -104,9 +104,9 @@ bool IvenCloudWiFi::parseApiKey()
   #endif
 
   //Find API-KEY
-  i = 0;
+  uint8_t i = 0;
   _check = false;
-  startTime = millis();
+  long startTime = millis();
   while (millis() - startTime < 5000) {
     if (i == 127)
       break;
