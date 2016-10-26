@@ -14,12 +14,21 @@ bool IvenCloudWiFi::ConnectClient()
     if (_client.connect(server,port)) 
       return true;
   }
+
+  #ifdef IVEN_DEBUG
+  Serial.println("ConnectClient >> Cant't connect server");
+  #endif
+
   response.error = IR_CANT_CONNECT_TO_SERVER;
   return false;
 }
 
 bool IvenCloudWiFi::handleResponseHeader() 
 {
+  #ifdef IVEN_DEBUG
+  Serial.println("handleResponseHeader >> Parsing response");
+  #endif
+
   uint8_t j, i = 0;
   long startTime = millis();
   while (millis() - startTime < 15000) {
@@ -35,6 +44,12 @@ bool IvenCloudWiFi::handleResponseHeader()
         }
         buffer[3] = '\0';
         response.httpStatus = strtoul(buffer, 0, 10);
+
+        #ifdef IVEN_DEBUG
+        Serial.print("handleResponseHeader >> http status: ");
+        Serial.println(response.httpStatus);
+        #endif
+
         if (response.httpStatus > 500)
           return false;
         i = 0;
@@ -73,39 +88,52 @@ bool IvenCloudWiFi::handleResponseHeader()
     }
   }
   
+  #ifdef IVEN_DEBUG
+  Serial.println("handleResponseHeader >> Timeout");
+  #endif
+
   response.error = IR_TIMEOUT;
   return false;
 }
 
+/* return true if api key is found */
 bool IvenCloudWiFi::parseApiKey() 
 {
+  #ifdef IVEN_DEBUG
+  Serial.println("parseApiKey >> parsing");
+  #endif
+
   //Find API-KEY
-  uint8_t i = 0;
+  i = 0;
   _check = false;
-  long startTime = millis();
+  startTime = millis();
   while (millis() - startTime < 5000) {
     if (i == 127)
       break;
-    if (buffer[i] == 'a' && buffer[i + 1] == 'p' && buffer[i + 2] == 'i' && buffer[i + 3] == '_' && 
-           buffer[i + 4] == 'k' && buffer[i + 5] == 'e' && buffer[i + 6] == 'y') {
+    if (buffer[i] == 'a' && buffer[i + 1] == 'p' && buffer[i + 2] == 'i' && buffer[i + 3] == '_' &&
+        buffer[i + 4] == 'k' && buffer[i + 5] == 'e' && buffer[i + 6] == 'y') {
       _check = true;
+      i += 10;
+      buffer[i + 40] = '\0';
+      _apiKey.concat((buffer + i)); // todo this looks like an error
+      #ifdef IVEN_DEBUG
+      Serial.print("parseApiKey >> apikey : ");
+      Serial.println(_apiKey.c_str());
+      #endif
       break;
     }
     i++;
   }
-
-  i += 10;
-
-  buffer[i + 40] = '\0';
-
-  // Set API-KEY
-  _apiKey.concat((buffer + i));
 
   return _check;
 }
 
 bool IvenCloudWiFi::handleResponseBody() 
 {
+  #ifdef IVEN_DEBUG
+  Serial.println("handleResponseBody >> looking for ivencode or task");
+  #endif
+
   uint8_t j, i = 0;
   _check = false;
   long startTime = millis();
@@ -113,7 +141,8 @@ bool IvenCloudWiFi::handleResponseBody()
     if (i == 127)
       break;
     if (buffer[i] == 'i' && buffer[i + 1] == 'v' && buffer[i + 2] == 'e' && buffer[i + 3] == 'n' &&
-          buffer[i + 4] == 'C' && buffer[i + 5] == 'o' && buffer[i + 6] == 'd' && buffer[i + 7] == 'e') {
+          buffer[i + 4] == 'C' && buffer[i + 5] == 'o' && 
+          buffer[i + 6] == 'd' && buffer[i + 7] == 'e') {
 
       _check = true;
       i += 10;
@@ -126,6 +155,11 @@ bool IvenCloudWiFi::handleResponseBody()
 
       // Set Iven Code
       response.ivenCode = strtoul((buffer + i), 0, 10);
+      
+      #ifdef IVEN_DEBUG
+      Serial.print("handleResponseBody >> ivencode: ");
+      Serial.println(response.ivenCode);
+      #endif
     }
 
     if (buffer[i] == 't' && buffer[i + 1] == 'a' && buffer[i + 2] == 's' && buffer[i + 3] == 'k') {
@@ -139,6 +173,10 @@ bool IvenCloudWiFi::handleResponseBody()
       buffer[j] = '\0';
 
       response.task.concat((buffer + i));
+      #ifdef IVEN_DEBUG
+      Serial.print("handleResponseBody >> task: ");
+      Serial.println(response.task.c_str());
+      #endif
     }
 
     i++;
@@ -165,6 +203,11 @@ void IvenCloudWiFi::createActivationCode(const char* secretKey, const char* devi
   }
 
   activationCode[40] = '\0';
+
+  #ifdef IVEN_DEBUG
+  Serial.print("createActivationCode >> activation code: ");
+  Serial.println(activationCode);
+  #endif
 }
 
 void IvenCloudWiFi::sendDataRequest(IvenData* data)
@@ -176,6 +219,10 @@ void IvenCloudWiFi::sendDataRequest(IvenData* data)
 
   char* jsonData = data->toJson();
 
+  #ifdef IVEN_DEBUG
+  Serial.print("sendDataRequest >> data to send: ");
+  Serial.println(jsonData);
+  #endif
   // Make request
   _client.println(F("POST /data HTTP/1.1"));
   _client.print(F("Host: "));
@@ -196,16 +243,33 @@ void IvenCloudWiFi::sendDataRequest(IvenData* data)
     if (handleResponseHeader()) {
 
       // Parse ivenCode
-      if (!handleResponseBody())
+      if (!handleResponseBody()) {
+        #ifdef IVEN_DEBUG
+        Serial.println("sendDataRequest >> no iven code found");
+        #endif
         response.error = IR_IVEN_CODE_MISSING;
+      }
+      #ifdef IVEN_DEBUG
+      else { Serial.println("sendDataRequest >> handleResponseBody successed"); }
+      #endif
     }
+    #ifdef IVEN_DEBUG
+    else { Serial.println("sendDataRequest >> handleResponseHeader failed"); }
+    #endif
 }
 
 void IvenCloudWiFi::activationRequest(char* activationCode)
 {
+  #ifdef IVEN_DEBUG
+  Serial.println("activationRequest >> Connecting");
+  #endif
   // Connect
   if(!ConnectClient())
     return;
+
+  #ifdef IVEN_DEBUG
+  Serial.println("activationRequest >> Connected, making request");
+  #endif
 
   // Make Request
   _client.println(F("GET /activate/device HTTP/1.1"));
@@ -221,12 +285,27 @@ void IvenCloudWiFi::activationRequest(char* activationCode)
 
     // Parse API-KEY
       if (!parseApiKey()) {
-        if (!handleResponseBody()) 
+        #ifdef IVEN_DEBUG
+        Serial.println("activationRequest >> parseApiKey failed");
+        #endif
+
+        if (!handleResponseBody()) {
+          #ifdef IVEN_DEBUG
+          Serial.println("activationRequest >> no ivencode found");
+          #endif
           response.error = IR_IVEN_CODE_MISSING;
-        else
-          response.error = IR_WRONG_ACTIVATION_CODE;
+        }
+        #ifdef IVEN_DEBUG
+        else { Serial.println("activationRequest >> handleResponseBody successed"); }
+        #endif
       }
+      #ifdef IVEN_DEBUG
+      else { Serial.println("activationRequest >> parseApiKey successed"); }
+      #endif
   }
+  #ifdef IVEN_DEBUG
+  else { Serial.println("activationRequest >> handleResponseHeader failed"); }
+  #endif
 }
 
 /***********************************************/
@@ -244,11 +323,31 @@ IvenCloudWiFi::IvenCloudWiFi()
 // Activates device on Iven cloud
 IvenResponse IvenCloudWiFi::activateDevice(const char* secretKey, const char* deviceId)
 {
+  #ifdef IVEN_DEBUG
+  Serial.print("activateDevice >> secretKey: ");
+  Serial.print(secretKey);
+  Serial.print(", deviceId: ");
+  Serial.println(deviceId);
+  #endif
+
   response.clearResponse();
-  if (!secretKey || !deviceId)
+
+  if (!secretKey || !deviceId) {
+    #ifdef IVEN_DEBUG
+    Serial.println("activateDevice >> secretKey or deviceId is NULL");
+    #endif
+
     response.error = IR_NULL_PARAMETER;
-  if (strlen(secretKey) != 40)
+    return response;
+  }
+  if (strlen(secretKey) != 40){
+    #ifdef IVEN_DEBUG
+    Serial.println("activateDevice >> secretKey's length is not 40");
+    #endif
+
     response.error = IR_INVALID_PARAMETER;
+    return response;
+  }
 
   // Creates activation code as hex string
   char activationCode[41];
@@ -262,12 +361,21 @@ IvenResponse IvenCloudWiFi::activateDevice(const char* secretKey, const char* de
 // Sends data to Iven cloud
 IvenResponse IvenCloudWiFi::sendData(IvenData& sensorData)
 {
+  #ifdef IVEN_DEBUG
+  Serial.println("sendData >>");
+  #endif
+
   response.clearResponse();
 
-  if (_apiKey.length() == 0)
+  if (_apiKey.length() == 0) {
+    #ifdef IVEN_DEBUG
+    Serial.println("sendData >> api key missing");
+    #endif
     response.error = IR_API_KEY_MISSING;
-  else
+  }
+  else {
     sendDataRequest(&sensorData);
+  }
 
   return response;
 }
