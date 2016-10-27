@@ -80,6 +80,11 @@ bool IvenCloudWiFi::handleResponseHeader()
         }
 
         buffer[j] = '\0';
+        #ifdef IVEN_DEBUG
+        Serial.println("handleResponseHeader >> body:");
+        Serial.println(buffer[0]);
+        Serial.println("############");
+        #endif
         return true;
       }
       i++;
@@ -107,7 +112,7 @@ bool IvenCloudWiFi::parseApiKey()
   uint8_t i = 0;
   _check = false;
   long startTime = millis();
-  while (millis() - startTime < 5000) {
+  while (millis() - startTime < 10000) {
     if (i == 127)
       break;
     if (buffer[i] == 'a' && buffer[i + 1] == 'p' && buffer[i + 2] == 'i' && buffer[i + 3] == '_' &&
