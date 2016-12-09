@@ -18,7 +18,7 @@ Further examples and guides can be found in iven blog : http://blog.iven.io
 #define server "demo.iven.io"
 #define port 80
 
-// #define IVEN_DEBUG
+//#define IVEN_DEBUG
 
 class IvenCloudWiFi { 
 public:
