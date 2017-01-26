@@ -31,6 +31,9 @@ public:
     // Posts data to Iven Product Cloud by using API-KEY and returns IvenResponse object for observation.
     IvenResponse sendData(IvenData& sensorData);
 
+    // Send do task event
+    IvenResponse doTask(int taskCode);
+
 private:
     IvenResponse response;
     String _apiKey;

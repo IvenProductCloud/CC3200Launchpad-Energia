@@ -384,3 +384,20 @@ IvenResponse IvenCloudWiFi::sendData(IvenData& sensorData)
 
   return response;
 }
+
+IvenResponse IvenCloudWiFi::doTask(int taskCode)
+{
+    IvenData temp;
+    temp.add("FEED", "task");
+    temp.taskDone(taskCode);
+
+    return sendData(temp);
+}
+
+
+
+
+
+
+
+

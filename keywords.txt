@@ -5,3 +5,4 @@ add		KEYWORD2
 sendData	KEYWORD2
 activateDevice	KEYWORD2
 taskDone	KEYWORD2
+doTask      KEYWORD2
