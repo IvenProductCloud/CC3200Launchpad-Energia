@@ -22,33 +22,33 @@ Further examples and guides can be found in iven blog : http://blog.iven.io
 
 class IvenCloudWiFi { 
 public:
-    // Creates IvenCloudWiFi object
-    IvenCloudWiFi();
+		// Creates IvenCloudWiFi object
+		IvenCloudWiFi();
 
-    // Activates device, saves API-KEY into object and returns IvenResponse object for observation.
-    IvenResponse activateDevice(const char* secretKey, const char* deviceId);
+		// Activates device, saves API-KEY into object and returns IvenResponse object for observation.
+		IvenResponse activateDevice(const char* secretKey, const char* deviceId);
 
-    // Posts data to Iven Product Cloud by using API-KEY and returns IvenResponse object for observation.
-    IvenResponse sendData(IvenData& sensorData);
+		// Posts data to Iven Product Cloud by using API-KEY and returns IvenResponse object for observation.
+		IvenResponse sendData(IvenData& sensorData);
 
-    // Send do task event
-    IvenResponse doTask(int taskCode);
-
-private:
-    IvenResponse response;
-    String _apiKey;
-    WiFiClient _client;
-    char buffer[128];
-    bool _check;
+		// Send do task event
+		IvenResponse doTask(int taskCode);
 
 private:
-    bool handleResponseHeader();
-    bool parseApiKey();
-    bool handleResponseBody();
-    void createActivationCode(const char* secretKey, const char* deviceId, char* activationCode);
-    void sendDataRequest(IvenData* data);
-    void activationRequest(char* activationCode);
-    bool ConnectClient();
+		IvenResponse response;
+		String _apiKey;
+		WiFiClient _client;
+		char buffer[128];
+		bool _check;
+
+private:
+		bool handleResponseHeader();
+		bool parseApiKey();
+		bool handleResponseBody();
+		void createActivationCode(const char* secretKey, const char* deviceId, char* activationCode);
+		void sendDataRequest(IvenData* data);
+		void activationRequest(char* activationCode);
+		bool ConnectClient();
 };
 
 #endif //PROJECT_IVENCLOUDWiFi_H

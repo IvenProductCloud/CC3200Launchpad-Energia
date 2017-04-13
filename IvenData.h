@@ -12,15 +12,15 @@ class IvenData : private String
 {
 
 public:
-    IvenData();
-    void add(const char* key, const char* value);
-    void add(const char* key, int value);
-    void add(const char* key, boolean value);
+		IvenData();
+		void add(const char* key, const char* value);
+		void add(const char* key, int value);
+		void add(const char* key, boolean value);
 	void add(const char* key, float value);
-    void taskDone(int ivenCode);
-    char* print();
-    void clear();
-    inline unsigned int length(void) const {return len;}
+		void taskDone(int ivenCode);
+		char* print();
+		void clear();
+		inline unsigned int length(void) const {return len;}
 
 private:
 	bool _task;
